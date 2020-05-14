@@ -1,6 +1,8 @@
 const path = require("path");
 const app_root = path.dirname(__dirname); // Parent of the directory where this file is
 
+require("dotenv").config();
+
 module.exports = {
     /** Port on which the application will listen */
     PORT: parseInt(process.env['PORT']) || 8080,
@@ -34,4 +36,7 @@ module.exports = {
 
     /** Blocked Tools. A comma-separated list of tools that should not appear on boards. */
     BLOCKED_TOOLS: (process.env['WBO_BLOCKED_TOOLS'] || "").split(','),
+
+    /** JWT Secret. */
+    JWT_SECRET: (process.env['JWT_SECRET'] || ""),
 };
