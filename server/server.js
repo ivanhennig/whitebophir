@@ -9,8 +9,8 @@ var app = require('http').createServer(handler)
 	, createSVG = require("./createSVG.js")
 	, templating = require("./templating.js")
 	, config = require("./configuration.js")
-	, polyfillLibrary = require('polyfill-library');
-
+	, polyfillLibrary = require('polyfill-library')
+    , jwt = require('jsonwebtoken');
 
 var MIN_NODE_VERSION = 8.0;
 
@@ -74,9 +74,27 @@ function validateBoardName(boardName) {
 }
 
 function handleRequest(request, response) {
+    let decoded = null;
 	var parsedUrl = url.parse(request.url, true);
 	var parts = parsedUrl.pathname.split('/');
 	if (parts[0] === '') parts.shift();
+
+    if (config.JWT_SECRET) {
+        var token = request.headers['x-access-token'];
+        if (!token) {
+            response.writeHead(401);
+            response.end('No token provided.');
+            return;
+        }
+
+        try {
+            decoded = jwt.verify(token, config.JWT_SECRET);
+        } catch (e) {
+            response.writeHead(400);
+            response.end('Failed to authenticate token.');
+            return;
+        }
+    }
 
 	switch (parts[0]) {
 		case "boards":
@@ -87,6 +105,9 @@ function handleRequest(request, response) {
 				response.writeHead(301, headers);
 				response.end();
 			} else if (parts.length === 2 && request.url.indexOf('.') === -1) {
+			    if (decoded && decoded.meetingID !== parts[1]) {
+                    throw new Error("You're not allowed to use " + parts[1]);
+                }
 				validateBoardName(parts[1]);
 				// If there is no dot and no directory, parts[1] is the board name
 				boardTemplate.serve(request, response);
