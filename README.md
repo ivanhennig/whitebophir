@@ -32,7 +32,7 @@ An official docker image for WBO is hosted on dockerhub as [`lovasoa/wbo`](https
 
 You can run it with the following command :
 
-```
+```shell script
 docker run -it --publish 5001:80 --volume $(pwd)/wbo-boards:/opt/app/server-data lovasoa/wbo:latest
 ```
 
@@ -47,7 +47,7 @@ You can then access WBO at `http://localhost:5001`.
 Alternatively, you can run the code with [node.js](https://nodejs.org/) directly, without docker.
 
 First, download the sources:
-```
+```shell script
 git clone git@github.com:lovasoa/whitebophir.git
 cd whitebophir
 ```
@@ -55,16 +55,27 @@ cd whitebophir
 Then [install node.js](https://nodejs.org/en/download/) (v8.0 or superior)
 if you don't have it already, then install WBO's dependencies:
 
-```
+```shell script
 npm install --production
+
+# If you got this: Error: EACCES: permission denied, open 'geckodriver.tar.gz'
+npm install --production --unsafe-perm=true --allow-root
 ```
 
 Finally, you can start the server:
-```
+```shell script
 PORT=5001 npm start
 ```
 
 This will run WBO directly on your machine, on port 5001, without any isolation from the other services.
+
+### JWT Token
+
+When using JWT, only clients with a valid `X-Access-Token` header will be allowed to join in.
+To make this work, go to the `.env` file and set your JWT secret as below.      
+```dotenv
+JWT_SECRET=MySecret
+```
 
 ### Running WBO on a subfolder
 
