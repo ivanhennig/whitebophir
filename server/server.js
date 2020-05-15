@@ -110,7 +110,7 @@ function handleRequest(request, response) {
 				response.writeHead(301, headers);
 				response.end();
 			} else if (parts.length === 2 && request.url.indexOf('.') === -1) {
-			    if (decoded && decoded.meetingID !== parts[1]) {
+			    if (decoded && decoded.roomName && decoded.roomName !== parts[1]) {
                     throw new Error("You're not allowed to use " + parts[1]);
                 }
 				validateBoardName(parts[1]);
