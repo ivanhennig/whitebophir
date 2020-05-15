@@ -105,7 +105,8 @@ function handleRequest(request, response) {
                         decoded = jwt.verify(token, config.JWT_SECRET);
                     } catch (e) {
                         response.writeHead(401);
-                        response.end('Failed to authenticate token.');
+                        response.end('Failed to authenticate token: ' + e.message);
+                        log('jwt', e);
                         return;
                     }
                 }
