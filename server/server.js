@@ -82,23 +82,6 @@ function handleRequest(request, response) {
 	    parts = parsedUrl.pathname.split('/');
 	if (parts[0] === '') parts.shift();
 
-    if (config.JWT_SECRET) {
-        token = request.headers['x-access-token'] || parsedUrl.query.jwt;
-        if (!token) {
-            response.writeHead(400);
-            response.end('No token provided.');
-            return;
-        }
-
-        try {
-            decoded = jwt.verify(token, config.JWT_SECRET);
-        } catch (e) {
-            response.writeHead(401);
-            response.end('Failed to authenticate token.');
-            return;
-        }
-    }
-
 	switch (parts[0]) {
 		case "boards":
 			// "boards" refers to the root directory
@@ -109,8 +92,25 @@ function handleRequest(request, response) {
                 };
 				response.writeHead(301, headers);
 				response.end();
-			} else if (parts.length === 2 && request.url.indexOf('.') === -1) {
-			    if (decoded && decoded.roomName && decoded.roomName !== parts[1]) {
+			} else if (parts.length === 2 && parsedUrl.pathname.indexOf('.') === -1) {
+                if (config.JWT_SECRET) {
+                    token = request.headers['x-access-token'] || parsedUrl.query.jwt;
+                    if (!token) {
+                        response.writeHead(400);
+                        response.end('No token provided.');
+                        return;
+                    }
+
+                    try {
+                        decoded = jwt.verify(token, config.JWT_SECRET);
+                    } catch (e) {
+                        response.writeHead(401);
+                        response.end('Failed to authenticate token.');
+                        return;
+                    }
+                }
+
+                if (decoded && decoded.roomName && decoded.roomName !== parts[1]) {
                     throw new Error("You're not allowed to use " + parts[1]);
                 }
 				validateBoardName(parts[1]);
