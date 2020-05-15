@@ -74,15 +74,18 @@ function validateBoardName(boardName) {
 }
 
 function handleRequest(request, response) {
-    let decoded = null;
-	var parsedUrl = url.parse(request.url, true);
-	var parts = parsedUrl.pathname.split('/');
+    let token,
+        decoded,
+        boardName,
+        history_file,
+	    parsedUrl = url.parse(request.url, true),
+	    parts = parsedUrl.pathname.split('/');
 	if (parts[0] === '') parts.shift();
 
     if (config.JWT_SECRET) {
-        var token = request.headers['x-access-token'];
+        token = request.headers['x-access-token'] || parsedUrl.query.jwt;
         if (!token) {
-            response.writeHead(401);
+            response.writeHead(400);
             response.end('No token provided.');
             return;
         }
@@ -90,7 +93,7 @@ function handleRequest(request, response) {
         try {
             decoded = jwt.verify(token, config.JWT_SECRET);
         } catch (e) {
-            response.writeHead(400);
+            response.writeHead(401);
             response.end('Failed to authenticate token.');
             return;
         }
@@ -101,7 +104,9 @@ function handleRequest(request, response) {
 			// "boards" refers to the root directory
 			if (parts.length === 1 && parsedUrl.query.board) {
 				// '/boards?board=...' This allows html forms to point to boards
-				var headers = { Location: 'boards/' + encodeURIComponent(parsedUrl.query.board) };
+                var headers = {
+                    Location: 'boards/' + encodeURIComponent(parsedUrl.query.board)
+                };
 				response.writeHead(301, headers);
 				response.end();
 			} else if (parts.length === 2 && request.url.indexOf('.') === -1) {
@@ -118,7 +123,7 @@ function handleRequest(request, response) {
 			break;
 
 		case "download":
-			var boardName = validateBoardName(parts[1]),
+			boardName = validateBoardName(parts[1]),
 				history_file = path.join(config.HISTORY_DIR, "board-" + boardName + ".json");
 			if (parts.length > 2 && /^[0-9A-Za-z.\-]+$/.test(parts[2])) {
 				history_file += '.' + parts[2] + '.bak';
@@ -137,7 +142,7 @@ function handleRequest(request, response) {
 
 		case "export":
 		case "preview":
-			var boardName = validateBoardName(parts[1]),
+			boardName = validateBoardName(parts[1]),
 				history_file = path.join(config.HISTORY_DIR, "board-" + boardName + ".json");
 			response.writeHead(200, {
 				"Content-Type": "image/svg+xml",
